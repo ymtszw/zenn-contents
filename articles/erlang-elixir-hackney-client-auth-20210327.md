@@ -8,7 +8,7 @@ topics:
   - TLS
   - SSL
   - クライアント認証
-published: false
+published: true
 ---
 
 TLSクライアント認証は使われる場面が少なく、これをErlang/Elixirで行っている日本語の解説記事となるともっと少ないので少し難儀した。やる機会があったのでここに書き残す。
