@@ -1,5 +1,5 @@
 ---
-title: Hackney(HTTPoison)でTLSクライアント認証する[Erlang/Elixir]
+title: Erlang/ElixirでTLSクライアント認証する
 emoji: 🔐
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics:
@@ -7,13 +7,13 @@ topics:
   - Elixir
   - TLS
   - SSL
-  - 認証
+  - クライアント認証
 published: false
 ---
 
 TLSクライアント認証は使われる場面が少なく、これをErlang/Elixirで行っている日本語の解説記事となるともっと少ないので少し難儀した。やる機会があったのでここに書き残す。
 
-TLSはまだしも、そこで行われるクライアント認証の仕組みのほうは普段あまり把握していないことが多いと思うので、自己完結した記事になるよう、そこの説明も合わせて書いておく。
+TLSはまだしも、そこで行われるクライアント認証の仕組みのほうは普段あまり把握していないことが多いと思うので、自己完結した記事になるよう、その説明も合わせて書いておく。
 
 この記事では、各種証明書を対象主体に対して発行・管理するための枠組みであるPKIやCAについては扱わない。
 
@@ -30,7 +30,7 @@ TLSはまだしも、そこで行われるクライアント認証の仕組み�
 4. クライアントは自分が事前に知っているルート証明書を起点としてサーバ証明書の正当性を検証する
     * ルート証明書はOSにインストールされていたり、あるいはブラウザに同梱されていたりする
     * （自分が勝手に作ったルート認証局で発行した、いわゆる「オレオレ証明書」を使ってテストしている場合などにスキップされるのはこの作業）
-5. 【**ClientKeyExchange**】クライアントはサーバ証明書に含まれる（＝サーバ証明書がその正当性を「証明」している）公開鍵を取り出し、それを使って「鍵交換」に応じる
+5. 【**ClientKeyExchange**】クライアントはサーバ証明書に含まれる（＝サーバ証明書がその正当性を「証明」した）公開鍵を取り出し、それを使って「鍵交換」に応じる
 6. 「鍵交換」は大変良くできた仕組みなので、ここまで成功するとクライアントとサーバは「それぞれ独立して」「同じ共通鍵を生成」することができる
     * この共通鍵は従って通信経路に暴露されない！すごい
 7. 【**ChangeCipherSpec, Finished**】最後にクライアントとサーバは、以降の通信内容はすべて共通鍵を使って暗号化することを了解しあい、暗号通信を1往復試してTLS Handshakeを完了する
@@ -42,7 +42,7 @@ TLSはまだしも、そこで行われるクライアント認証の仕組み�
 
 # TLSクライアント認証（Mutual TLS）
 
-こような「片方向」のTLSはHTTPSで広く使われるようになった。そのためにサーバ証明書を用意するとか、Let's Encryptを使うとか、AWS Certificate Managerが大変便利とか、みんな知っていると思われる。
+「片方向」のTLSはHTTPSで広く使われるようになった。そのためにサーバ証明書を用意するとか、Let's Encryptを使うとか、AWS Certificate Managerが大変便利とか、みんな知っていると思われる。
 
 一方で「逆方向」つまりクライアント証明書を使ってサーバがクライアントを認証するという仕組みも提供されていて、両方向同時に使うと**Mutual TLS**となる。
 
@@ -56,7 +56,7 @@ TLSはまだしも、そこで行われるクライアント認証の仕組み�
 * 【**Certificate**】クライアントはクライアント証明書をサーバに提供する
 * サーバは（クライアントがサーバ証明書に対してするのと同様に）自分が事前に知っているルート証明書を起点としてクライアント証明書の正当性を検証する
 * 【**CertificateVerify**】前節5.で鍵交換の応答を返したあと、クライアントは「そこまでの通信内容全て」に対し、クライアントの秘密鍵で署名を生成してサーバに提供する
-* サーバはクライアント証明書に含まれる（＝クライアント証明書がその正当性を「証明」している）公開鍵を取り出し、署名を検証してクライアントが対となる秘密鍵を持っている（＝クライアント証明書の持ち主である）ことを確かめる
+* サーバはクライアント証明書に含まれる（＝クライアント証明書がその正当性を「証明」した）公開鍵を取り出し、署名を検証してクライアントが対となる秘密鍵を持っている（＝クライアント証明書の持ち主である）ことを確かめる
 
 となる。「逆方向」という通りほぼ逆向きに同じようなことをやるだけなのだが、サーバの秘密鍵・公開鍵ペアは鍵交換に使われる（＝鍵交換が成功することで、対象のサーバが秘密鍵を持っていることを確かめられる）のに対し、クライアントの秘密鍵・公開鍵ペアは鍵交換に使われないので、追加で署名提供と検証のステップを加えることで秘密鍵の所在確認を行っている。
 
@@ -103,6 +103,7 @@ pem = File.read!("path/to/key_and_cert.pem")
 [priv_key | pub_key_certs] = :public_key.pem_decode(pem)
 
 # PEMのエントリはこんな感じのtupleである（PEMはBase64エンコードしたDERなので、ここでDERが得られる）
+# DERが更に暗号化されている場合もサポートされているが、ここでは暗号化されていない場合
 {:PrivateKeyInfo, <<_::binary>> = der, :not_encrypted} = priv_key
 
 # ここからさらにPEMエントリをデコードする関数と、DERをデコードする関数、どちらも提供されているが、結果は同じとなる
@@ -110,3 +111,77 @@ pem = File.read!("path/to/key_and_cert.pem")
 {:RSAPrivateKey, :"two-prime", ... 素数など ...} = :public_key.pem_entry_decode(priv_key)
 {:RSAPrivateKey, :"two-prime", ... 素数など ...} = :public_key.der_decode(:PrivateKeyInfo, der)
 ```
+
+これでクライアント認証する準備は整った。
+
+# Hackney/HTTPoisonを経由して、Erlangのsslモジュールでクライアント認証する
+
+[Hackeny](https://github.com/benoitc/hackney)はErlangのHTTPクライアントライブラリ、[HTTPoison](https://github.com/edgurgel/httpoison)はそのElixirラッパー。デファクト・スタンダードというわけではないがどちらも比較的よく使われる。
+
+Erlang/ElixirでHTTPクライアントに何を使うとしても、TLSの処理は内部的にErlangの`ssl`モジュールが使われている（例外は原理的にはありうるが、見たことはない）。サーバ証明書だけを使う片方向TLSについてはユーザが特に意識せずに処理してもらえるデフォルト挙動となっているだろう。クライアント認証などの追加の処理を行うときだけ、オプションから必要な情報を注入する。
+
+同様に`ssl`モジュールを使っている他のHTTPクライアントでも同じことができる。オプションの注入経路をまとめると、
+
+* Hackneyから使う場合、`ssl_options`
+* HTTPoisonから使う場合、`:ssl`
+* [gun](https://github.com/ninenines/gun)から使う場合、`tls_opts`
+* [Mint](https://github.com/elixir-mint/mint)から使う場合、`:transport_opts`
+
+**なんと全部違う**。それぞれ思想や時代背景が出ていて面白い。
+
+で、肝心の指定できるオプションは[`ssl:tls_client_option`](https://erlang.org/doc/man/ssl.html#type-tls_client_option)に列挙されている。
+ここでやりたいクライアント認証のための主なオプションと型は以下：
+
+* [`{cert, cert() | [cert()]}`](https://erlang.org/doc/man/ssl.html#type-cert)
+  ```erlang
+  -type cert() :: public_key:der_encoded().
+  ```
+    * クライアントの公開鍵証明書。末端の証明書だけ渡すこともできるし、証明書チェーンをリストとして渡すこともできる。末端の証明書を渡した場合、証明書チェーンはその他のプションから組み立てられる
+    * 型定義から、DER形式で渡す必要があると読める
+* [`{key, key()}`](https://erlang.org/doc/man/ssl.html#type-key)
+  ```erlang
+  -type key() :: { 'RSAPrivateKey' | 'DSAPrivateKey' | 'ECPrivateKey' | 'PrivateKeyInfo',
+                  public_key:der_encoded()}
+              |  #{algorithm := rsa | dss | ecdsa,
+                   engine := crypto:engine_ref(),
+                   key_id := crypto:key_id(),
+                   password => crypto:password()}.
+  ```
+    * クライアントの秘密鍵。鍵ファイル由来のデータを使う場合はASN.1のタイプと、DER形式の鍵のtupleを渡すように読める
+* その他、PEMファイルをそのまま指定する場合の`certfile`や`keyfile`、ルート証明書を具体指定する`cacerts`や`cacertfile`、暗号スイートを調整する`ciphers`など
+
+我々はすでに前節でPEMファイルを読み込んで、DERにデコードした状態でメモリ内に保持することができている。ということで、以下のように使用する。
+
+```elixir
+# 再掲
+[priv_key | pub_key_certs] = :public_key.pem_decode(pem)
+{:PrivateKeyInfo, <<_::binary>> = der_pkey, :not_encrypted} = priv_key
+
+# pub_key_certsは[{:Certificate, <<_::binary>>, :not_encrypted}, ...]という形式
+# なのでmapしてtupleの真ん中のDERだけ取り出す
+der_certs = Enum.map(pub_key_certs, fn {_type, der, :not_encrypted} -> der end)
+
+# ここではkeyとcertの指定以外は全てデフォルト値を利用
+ssl_opts = [key: {:PrivateKeyInfo, der_pkey}, cert: der_certs]
+HTTPoison.post("https://client-auth.example.com/api",
+               ~S/{"key":"value"}/,
+               [{"content-type","application/json"}],
+               ssl: ssl_opts)
+```
+
+これにてめでたくクライアント認証が成功する。
+
+鍵ペアのファイルを直接指定するか、予め読み込んでおいたものを指定するかはプログラムの用途と実行環境による。一般的な話だが、
+
+* サーバプログラムで、ユーザのリクエストなどを契機として比較的頻繁にクライアント認証が必要になるなら、鍵ペアの内容を予めメモリに読み込んでおいたほうがいい
+  * 特に鍵ファイルの置き場所がNFSなどをマウントしたパスだったりすると、頻繁な読み出しはボトルネックになるし、外部ストレージ側に急な障害が起きた場合に例外発生するタイミングがユーザリクエスト処理のタイミングとなってしまう
+  * 起動時処理の一環として予め鍵ペアファイルを読み込み、デコードし、ETSなどに保持しておけば、ストレージI/Oはその後発生せず、障害も起動時に気づける
+* ユーザの手元に配布して実行するスクリプトなどの場合は都度ファイル読み出しでも構わない
+
+ただ、HackneyもGunもMintもTCP接続を可能な限りプールしておいて再利用するという効率化が行われているので、実際そんなに毎回TCP/TLS Handshakeは必要なく、心配するのはずっと先でいいだろう。
+
+# あとがき
+
+`ssl`モジュールのAPIはdoc読んだら意外とそのまま使えた。
+
+むしろ各種ファイル形式間の関係性をちゃんと知らなかったので、そこを調べて理解する作業が必要なのだった。
