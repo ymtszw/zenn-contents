@@ -7,7 +7,7 @@ topics:
   - Parsec
   - Parser
 published: true
-publication: siiibo_tech
+publication_name: siiibo_tech
 marp: true
 theme: gaia
 class: invert
