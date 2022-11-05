@@ -6,7 +6,7 @@ topics:
   - Elixir
   - Parsec
   - Parser
-published: false
+published: true
 publication: siiibo_tech
 marp: true
 theme: gaia
@@ -25,7 +25,7 @@ By [ymtszw](https://zenn.dev/ymtszw) @ tokyo.ex#21 (2022/11/05) [^1]
 
 * [dashbitco/nimble_parsec](https://github.com/dashbitco/nimble_parsec)
 * 元々Plataformatec（Joséの所属していたRuby/Elixir開発コンサル。Nubankに買収された）で開発され、新会社のDashbitに移管されたパーサーコンビネータライブラリ
-* "Nimble"シリーズの一つ
+* "Nimble"シリーズライブラリの一つ
 
 > `NimbleParsec` is a simple and fast library for text-based parser combinators.
 
@@ -43,7 +43,7 @@ By [ymtszw](https://zenn.dev/ymtszw) @ tokyo.ex#21 (2022/11/05) [^1]
 ## "Parser"
 
 * Parserの正体は**関数**
-* 文字列を受け取り、いずれかを返す
+* 文字列を受け取り、いずれかを返す:
   * 成功した場合は読み取り結果であるデータと、読み取り完了した位置
   * 失敗した場合はその事実、ライブラリによってはより具体的な失敗内容
 
@@ -261,4 +261,4 @@ choice([
 
 Elixirで「パーサ書きたいんだが？」と思ったらNimbleParsecを思い出そう！
 
-* 著者紹介（[前回のtokyo.ex#20のスライド](https://docs.google.com/presentation/d/e/2PACX-1vRuIA2ocDafLRJUn6nWScZmOq6YwpqXba7x5RG72yzT3X7FB-JcET33QMGsBidHsAdbnVF9KYCOa00R/embed?start=false&loop=false&delayms=3000&slide=id.g155be708576_0_55)）
+* [著者紹介](https://docs.google.com/presentation/d/e/2PACX-1vRuIA2ocDafLRJUn6nWScZmOq6YwpqXba7x5RG72yzT3X7FB-JcET33QMGsBidHsAdbnVF9KYCOa00R/embed?start=false&loop=false&delayms=3000&slide=id.g155be708576_0_55)（前回のtokyo.ex#20のスライド）
