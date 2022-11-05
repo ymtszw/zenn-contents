@@ -5,6 +5,9 @@
   "repository": "git@github.com:ymtszw/zenn-contents.git",
   "author": "Yu Matsuzawa <ymtszw@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "start": "marp --html --server articles/"
+  },
   "devDependencies": {
     "@marp-team/marp-cli": "^2.2.0",
     "zenn-cli": "^0.1.77"
