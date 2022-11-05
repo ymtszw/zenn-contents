@@ -6,6 +6,7 @@
   "author": "Yu Matsuzawa <ymtszw@gmail.com>",
   "license": "MIT",
   "devDependencies": {
+    "@marp-team/marp-cli": "^2.2.0",
     "zenn-cli": "^0.1.77"
   }
 }
