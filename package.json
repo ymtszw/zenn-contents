@@ -6,10 +6,9 @@
   "author": "Yu Matsuzawa <ymtszw@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "start": "run-pty % npm run start:zenn % npm run start:marp % npm run poststart",
-    "start:zenn": "zenn preview --port 8080",
-    "start:marp": "PORT=8081 marp --html --server articles/",
-    "poststart": "wslview http://localhost:8080 || open http://localhost:8080; wslview http://localhost:8081 || open http://localhost:8081"
+    "start": "run-pty % npm run http://localhost:8080 % npm run http://localhost:8081",
+    "http://localhost:8080": "zenn preview --port 8080",
+    "http://localhost:8081": "PORT=8081 marp --html --server articles/"
   },
   "devDependencies": {
     "@marp-team/marp-cli": "^2.2.0",
