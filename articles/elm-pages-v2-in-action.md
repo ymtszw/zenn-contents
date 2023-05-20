@@ -16,6 +16,8 @@ paginate: true
 
 ## elm-pages in Action
 
+...あるいは、elm-pagesの概念的ポイント解説
+
 By [ymtszw](https://zenn.dev/ymtszw)
 @[Elm-jp 2023](https://elm-jp.connpass.com/event/280401/) (2023/05/20) [^1]
 
