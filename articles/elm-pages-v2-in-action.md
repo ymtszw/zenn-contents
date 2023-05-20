@@ -224,3 +224,4 @@ type Flags
   - 自前サイトでの具体的なコードの話とか、
   - いくつか裏技小技とか、
   - その辺も書きたいのだが、また別の機会に
+- [著者紹介](https://docs.google.com/presentation/d/e/2PACX-1vRuIA2ocDafLRJUn6nWScZmOq6YwpqXba7x5RG72yzT3X7FB-JcET33QMGsBidHsAdbnVF9KYCOa00R/embed?start=false&loop=false&delayms=3000&slide=id.g155be708576_0_55)（tokyo.ex#20のスライド）
