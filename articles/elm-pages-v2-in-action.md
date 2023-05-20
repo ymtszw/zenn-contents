@@ -1,11 +1,11 @@
 ---
-title: "elm-pages in Action"
+title: "Elm-pages in Action"
 emoji: "📚"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics:
   - elm
   - ssg
-published: false
+published: true
 marp: true
 theme: gaia
 class: invert
@@ -14,7 +14,7 @@ paginate: true
 
 <!-- _class: [lead, invert] -->
 
-## elm-pages in Action
+## Elm-pages in Action
 
 ...あるいは、elm-pagesの概念的ポイント解説
 
