@@ -115,8 +115,8 @@ const appPromise = new Promise(function(a){
 
 ---
 
-1) Build-timeのpre-rendering
-2) ブラウザ内でのclient-side rendering
+- 1. Build-timeのpre-rendering
+- 2. ブラウザ内でのclient-side rendering
 
 => この2つが(少なくともrender完了直後のフレームにおいて)**寸分違わず一致するならば**、第一の成果物由来のHTML表示そのままに、第二の成果物由来のSPAによる処理に間断なく移行できる、という理屈
 
