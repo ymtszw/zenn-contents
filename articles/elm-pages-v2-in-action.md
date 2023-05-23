@@ -225,3 +225,18 @@ type Flags
   - いくつか裏技小技とか、
   - その辺も書きたいのだが、また別の機会に
 - [著者紹介](https://docs.google.com/presentation/d/e/2PACX-1vRuIA2ocDafLRJUn6nWScZmOq6YwpqXba7x5RG72yzT3X7FB-JcET33QMGsBidHsAdbnVF9KYCOa00R/embed?start=false&loop=false&delayms=3000&slide=id.g155be708576_0_55)（tokyo.ex#20のスライド）
+
+---
+
+## Q. elm-pagesはpre-render時にどのタイミングで生成されたHTMLを確定するの？
+
+**A. いい質問ですね。** 個人的にあまり深追いしていなかった部分です。
+
+- 例えばページのsubscription関数で`onAnimationFrame`を使ったりして、次フレームからいきなりページ内容が連続的に変化するような実装をした場合、pre-renderとbrowser-renderの2つのアプリの一致点を取りにくいんではないか。
+
+---
+
+- pre-renderに使ってるライブラリがよしなにやってくれてるのかもしれない。
+  - 最初のフレームで止めるとか？そんなことできるんだろうか
+  - v1のときはprerender.ioを使ってたような記憶があるけど今どうなってるんだろう。
+  - 読者への課題とします。
