@@ -5,15 +5,16 @@
 - プレビューサーバ起動
 
 ```sh
-yarn
-yarn start
+npm ci
+npm start
 # http://localhost:8080 でプレビュー
+# http://localhost:8081 でMarpスライドモード
 ```
 
 - 新規記事追加
 
 ```sh
-yarn zenn new:article --slug <slug>
+npx zenn new:article --slug <slug>
 ```
 
 ## Marpスライド
