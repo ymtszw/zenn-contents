@@ -1,5 +1,5 @@
 ---
-title: "Elmのlintツールelm-reviewのProjectRuneSchemaを使ってボイラープレート生成する"
+title: "Elmのlintツールelm-reviewのProjectRuleSchemaを使ってボイラープレート生成する"
 emoji: "✏"
 type: "tech"
 topics:
@@ -16,7 +16,7 @@ paginate: true
 
 <!-- _class: [lead, invert] -->
 
-## Elmのlintツールelm-reviewのProjectRuneSchemaを使ってボイラープレート生成する
+## Elmのlintツールelm-reviewのProjectRuleSchemaを使ってボイラープレート生成する
 
 By [ymtszw](https://zenn.dev/ymtszw)
 @[Elm-jp Online #3](https://elm-jp.connpass.com/event/288224/) (2023/07/22) [^1]
