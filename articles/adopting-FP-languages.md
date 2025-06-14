@@ -330,14 +330,106 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
 
 ---
 
+<!-- _class: [lead, invert] -->
 ## ビルドとテストの高速化
 
-- 関数型言語はAOTコンパイルが多い
-- プロダクトが育つとビルドやテストが遅くなりがち
-- 高速化のための取り組みや工夫
+血道をあげろ！
 
 ---
 
+### コンパイル速度
+
+- 関数型言語はAOTコンパイルが多い
+  - ElixirもElmもそう
+- プロダクトが育つとビルドやテストが遅くなりがち
+
+---
+
+### 高速化し続ける
+- ユーザ側の努力でも高速化できる余地はあり、常に追求する
+- 高速化に繋がりそうな更新情報の追跡も怠らない
+- メンバーが増えるほどに、ローカル/CIいずれでもビルドやテストの実行時間短縮は乗算で大量の時間節約になる
+
+---
+### 高速化: mix test
+
+- [mix test](https://hexdocs.pm/mix/Mix.Tasks.Test.html)はElixirの標準テスト実行経路
+- 純粋なunit testも、背後のDBや外部サービス等の存在下で行うintegration testも書ける
+- master merge前のCIではDBのみ存在する前提で記述しているmix testを必須としている
+  - SMLテストサイズで言うところのMediumくらい
+    - 参考: [ユニットテストってもう言わない！ CI/CD時代のテスト分類に最適なテストサイズという考え方](https://zenn.dev/koduki/articles/e0f8824adbe0e9)
+
+---
+### 高速化: mix test
+
+- 該当するmix testの件数は最新のコードで4,500件ほどある
+- かなり多くの割合がDB I/Oを含む
+- これを少なくともApple Silicon MacBook系のローカル開発機では1分程度で実行できるよう維持している
+
+![w:800 mix test実行時間](/images/siiibo-test-time.png)
+
+---
+### 高速化: mix test
+
+- 実際にやっているのは、
+  - テストの並列実行
+  - 並列実行を可能にするための、
+    - DBの複製
+    - Test fixtureの独立化
+    - Sandbox接続の利用
+  - DB初期化を高速にするためのsnapshot活用
+
+<!-- Sandbox接続は、DB接続直後にTxを開始し、その内部でのDB操作を接続終了時にすべてロールバックすることで、DB接続が続いている限り、そのプロセスにとっては実際にデータがDBに書き込まれたように振る舞うが、テスト終了時にはすべての操作がなかったことにされてクリーンな状態に戻るという仕組み -->
+
+---
+### 高速化: mix test
+
+- 並列実行自体はmix testの標準機能
+- DB接続のSandboxingも[Ecto](https://github.com/elixir-ecto/ecto)（ElixirのORM+Query Builder）の標準機能
+- ただし、
+  - module単位でしか並列実行できない
+  - 自然体だと同じDBを使うので、sandboxingしていてもWRITE操作の内容によってはdeadlockする
+
+---
+### 高速化: mix test
+- そこで、
+  - テスト同士の相互依存をなくすために、必要なfixtureデータはsandbox内で独立して作成する
+  - テストDBを実行並列度に応じて複製する
+  - テストごとに利用DBをcheckout/checkinする機構を設ける
+    - Ectoの[Dynamic Repo](https://hexdocs.pm/ecto/replicas-and-dynamic-repositories.html#dynamic-repositories)機能がこれを可能にしてくれる
+
+---
+### 高速化: mix test
+- しかしEcto migration（よくあるパッチ方式のDB migration機能）を複製DB全てに適用するのは時間がかかる...
+  - そこで、最新のDB schema snapshotを定期的に取得しておき、新規のテストDB作成時にはsnapshotから開始できるようにして高速化
+- ここまで見てきたように、Ectoの諸機能は快適なテスト実行に大いに寄与しており、こいつがデファクト・スタンダードとして存在していることはElixirの大きな強み
+
+---
+### 高速化: elm make
+- Elmのインクリメンタルコンパイルはデフォで比較的速い
+  - これはDCEを有効化したprod buildでも同様
+- が、コンパイル対象moduleが多いときはそこそこかかる
+- しかも、**特定の実装パターンがあると、構成module数が増えたときにGC時間及びメモリ使用量が増えるという現象**に遭遇したことがあった
+
+---
+### 高速化: elm make
+- 自分でやる精神のもと、社内で調査
+- ここはメンバーの[@tsukimizake](https://github.com/tsukimizake)が大活躍
+  - プロファイラーを有効化してコンパイラをビルド
+  - プロファイラーオプションを調整してボトルネック調査
+  - Excessive GCを引き起こしていた実装パターンを特定
+  - 当該パターンを回避できるようにコード生成系を改修
+
+---
+### 高速化: elm make
+- そもそも、このあたりをまるっと改修できるよう、コード生成系が整備されていたのも大きかった。この点は後述
+- [elm-meetup](https://elm-jp.connpass.com/event/262458/)でも発表された
+  - [tsukimizake/elm-compilation-time-slide](https://github.com/tsukimizake/elm-compilation-time-slide/?tab=readme-ov-file)
+  - [tsukimizake/elm-compilation-time-slide の続き](https://github.com/tsukimizake/elm-compilation-slide-2/?tab=readme-ov-file)
+- 得られた知見はフォーラムにも展開
+  - [Improving Compilation time: Insights from Elm Compiler Internals - Show and Tell - Elm](https://discourse.elm-lang.org/t/improving-compilation-time-insights-from-elm-compiler-internals/9028)
+
+---
 ## 静的型付けでない言語と型の話
 
 - 静的型付けでない言語でも型は重要
