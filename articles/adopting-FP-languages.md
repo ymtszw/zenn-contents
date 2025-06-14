@@ -430,24 +430,145 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
   - [Improving Compilation time: Insights from Elm Compiler Internals - Show and Tell - Elm](https://discourse.elm-lang.org/t/improving-compilation-time-insights-from-elm-compiler-internals/9028)
 
 ---
+### 高速化の章のまとめ
+
+- AOTコンパイル言語、それもコンパイル時の機能（型検査含む）が豊富であれば、コードが育つほどに速度問題は不可避
+- コンパイラの改善でほっといても速くなってくれることもあるが、基本的には自分でやる精神はここでも発揮する必要がある
+- 速さと向き合え！
+
+---
+
+<!-- _class: [lead, invert] -->
 ## 静的型付けでない言語と型の話
 
-- 静的型付けでない言語でも型は重要
-- ElmとElixirで開発することで生じる型への感覚
-- Elixirに型がやってくる話
+---
+### Elixirやってると思うこと
+
+- **まあ型は欲しくなる**
+  - 型があったらこのバグは起きなかった、みたいなことは定期的にある
+- とはいえElmといっしょに開発し、多くのメンバーがなんだかんだElmも書いているという状況では、ありがたいことに多くの学びがある
+
+---
+### 直和による表現、パターンマッチによる分岐
+- Elmは言語機能が少ない静的型付けの純粋関数型言語
+  - 典型的な実装イディオムとして、直和型とパターンマッチが頻出する
+  - 昔書いた記事: [「ADT, 直和・直積, State Machine」 - Qiita](https://qiita.com/ymtszw/items/dff02ad6350032688676)
+- Elixirはその点、
+  - 型の静的検査はない
+  - 直和を表現する専用の言語機能はない
+
+---
+### 直和による表現、パターンマッチによる分岐
+- が、Atomを使った「直和的な」データ表現はかなり頻出で（Erlang/Elixirの標準ライブラリ内でも！）、そのことに自覚的になると「自然な」実装パターンが見えてくる（主観）
+  - 筆頭は`{:ok, value} | {:error, reason}`
+- 「Elmだとそういえばこう書いてたな、これElixirでもやれないの？」はそれなりにやれる
+  - 特に副作用の絡まない関数では表現を似せられて腹落ちすることが多い
+  - `Result`型に対する諸APIはElixir側にも実装してある
+
+---
+### Pipeline-friendlyなassertion
+- [elm-test](https://package.elm-lang.org/packages/elm-explorations/test/latest/Expect)では`Expect`系関数をpipelineで受けて書かれる
+
+```elm
+String.split " " "Betty Botter bought some butter"
+    |> Expect.equal [ "Betty Botter", "bought", "some", "butter" ]
+```
+
+- 一方`mix test`では`assert`マクロを手続き的に並べて書くことが多いが、場合によってはElmからの影響もあってpipeで書きたくなる
+
+---
+### Pipeline-friendlyなassertion
+- [siiibo/assert_match](https://github.com/siiibo/assert_match)はそのような日常的洞察から生まれたOSS
+- 手前味噌ながらこの`assert_match`マクロは結構強力で、どのような構造に対してもパターンマッチとしてassertionを書けるので、
+  - pipeで書けて気持ちいいし
+  - Elixirの強力なパターンマッチ機構を活かせるし、
+  - 「関数とは入力と出力なのだ」という意識が高まる
+  - （主観）
+
+---
+### 天から型が降ってきた！
+
+- そんなこんなで言語間比較による恩恵はある程度受けていた
+- 関数型言語によく出てくる概念は、単一の言語だけやってるとイマイチ腹落ちせず、いくつか言語をまたぐと得心できることが多いという経験則があり、その意味でも有用
+  - 個人的には、**Scalaで始まり、Elixirに入り、Haskellの手ほどきを受け、Elmで色々理解した**、という関数型キャリアパスを辿ってきた
+
+---
+### 天から型が降ってきた！
+- とはいえ章冒頭の通り、Elixirに静的型検査がないことには定期的につまらなさを感じていたのだが...
+- なんとElixirのコンパイラが静的型検査を始めるという大本営発表がなされたのだ！
+  - [My Future with Elixir: set-theoretic types](https://elixir-lang.org/blog/2022/10/05/my-future-with-elixir-set-theoretic-types/) (2022/10/05)
+  - [Gradual set-theoretic types](https://hexdocs.pm/elixir/gradual-set-theoretic-types.html)
+  - [The Design Principles of the Elixir Type System](https://arxiv.org/abs/2306.06391)
+
+---
+### 天から型が降ってきた！
+- Elixir v1.18で一部型検査機能がすでに有効化され、早速既存コードベースでもいくつかの潜在バグを発見・解消できた
+- [Elixir v1.19](https://github.com/elixir-lang/elixir/releases/tag/v1.19.0-rc.0)でもさらに入る：
+  - Type checking of protocol dispatch and implementations
+  - Type checking and inference of anonymous functions
+- ついでに大規模コードベースでのコンパイル速度改善施策も入る
+- **Upkeepをこまめにやるのは、このような新施策をすぐ採用できる強みに直結**
+
+---
+### 静的型付けでない言語と型の話の章のまとめ
+
+- 関数型言語のエッセンスを体得するには複数言語に触れたほうがいい
+  - その意味でElixir/Elmのスタックは有用だったという振り返り
+  - 両者の実装が自然と親和して、認知モデルを共有できる
+- 型で考えていると型の方から（文字通り）やってくることもある
 
 ---
 
+<!-- _class: [lead, invert] -->
 ## 情報収集 / コミュニティ還元
+「アウトリーチ」
 
-- ほっといても情報が入ってくる言語ではない
-- アクティブに情報を集める必要性
-- コミュニティへの還元や採用戦略との関係
+---
+### 情報収集
+- 非メインストリームな言語はほっといても情報が入ってくるわけではない
+  - 規模にもよるが
+- それでも狂気を発露して採用に踏み切ったのなら、**アクティブな情報収集**は必須
+
+---
+### 情報収集
+- 言語公式フォーラム/ML/Slack/Discordのウォッチ
+  - コミュニティがデカすぎないことを逆に活かして、ライブラリ開発者などがよく出入りしているトピックやチャンネルを購読しちゃう
+  - 最新動向を嫌でも逃さなくなる
+  - 社内にも展開する
+- コンパイラや主要なライブラリのissue trackerも購読しちゃう
+  - チーム内で抱えてる課題と似たような話題も出たりする
+- X
+
+---
+### コミュニティ還元
+- ウォッチしている経路での、質問者に対する回答
+  - 聞いてるだけでなく回答もする
+  - なにげに「自分が第一人者」「フロントランナー」である可能性を意識
+  - 英語翻訳にはあまり困らない時代になった
+- 国内外の勉強会参加
+  - 何なら開催協力
+
+---
+### 採用の話
+- ここまで書いてきた「やれることやってる」環境を維持し、アウトリーチもすることは、とりも直さず採用に直結
+- 何しろ非メインストリームな技術要素は、それを業務でちょっと触ってみたいと思っても**会社の選択肢が少ない**
+- 選択肢がほしい・見識を広げたい人にとっては良いマッチング機会
+
+<!-- 幸運もあるが、これまで採用にはあまり困ったことがなく、何ならインバウンドで定期的に希望者が来てくれている -->
+
+---
+### アウトリーチの章まとめ
+- やれることはやる、近道はない
+- 人口の少なさは好機でもある
+- 全世界を対象にすれば意外とコミュニティは広い
 
 ---
 
+<!-- _class: [lead, invert] -->
 ## 新しい手法を取り入れる
 
+---
+### E2Eテスト
 - E2Eテストやelm-reviewによるlint・コード自動生成
 - AIコード支援など新しい道具の導入
 - 当初はなかった手法を後から取り入れる柔軟性
