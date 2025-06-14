@@ -91,7 +91,7 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
 ### ...とか言ってられるか
 
 - 良いと感じた技術があって、良いモノを作れると検証できたのであれば、あとは自分がやるかどうかでしかない
-  - というか、勝手に機会が降ってくることがない
+  - というか、**勝手に機会が降ってくることがない**
 - ある種の狂気を必要とする点で、非メインストリームな技術採用はスタートアップ起業自体と似ている
   - その試み自体が仮説検証であり、失敗にもまた学びがあるが、結局は勇気と周りを巻き込んで走り続ける力
 
@@ -99,7 +99,7 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
 
 ### 「支え」となるもの
 
-- とはいえ「この技術がイイらしい、とりあえずやってみよう」は爆発しそう
+- とはいえ「この技術がイイらしい、とりあえずやってみよう」はいかにも爆発しそう
   - そこまで無根拠なのは蛮勇
 - 何が支えとなって一歩を踏み出せるのか？
 
@@ -116,6 +116,8 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
   - 先行しているOSSのコードを読んで、先人の開拓した領域に触れておくこと
 - 筆者の場合は...
 
+<!-- 幸い、関数型言語は「誰が書いてもこういう形に落ち着きそう」といったコードの帰着先がそれなりに浮かび上がりやすい傾向にあるという肌感がある -->
+
 ---
 
 #### Elixir
@@ -125,7 +127,7 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
 - 個人的にも業務内外でElixirをかなりの時間書いた
   - [blick](https://github.com/ymtszw/blick) - Antikythera上で動く勉強会スライド集積アプリ
   - [hipchat_elixir](https://github.com/ymtszw/hipchat_elixir) - 今は亡きHipChatのclientをSwaggerから自動生成
-- 現職でも必要に応じてOSSリリースしている
+- 現職でも必要に応じてOSSリリースしている（後述）
   - [siiibo/assert_match](https://github.com/siiibo/assert_match) - Pipeline-friendlyなassertionマクロ
 
 ---
@@ -145,7 +147,8 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
 - ...が、究極的には**主観**だと思っている
   - この言語で5年10年戦えるか？実現したい要求に叶うか？飽きないか？
 - プラス、「何らか行き詰まったときに捨てやすいか？」という観点もある
-  - これは言語自体というよりアプリケーションアーキテクチャでそれなりに担保できる
+  - これは言語自体というよりアプリケーションアーキテクチャで担保する側面か？
+  - 未だ大規模にコードを捨てたことがないのでここについては未経験領域
 
 <!-- 詳細書くかも -->
 
@@ -155,7 +158,7 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
 
 - 何らかの技術要素を採用して業務に挑もうとするとき、必然的にFounding Engineerはコードレビューをする立場
   - 自分がいいと思う技術であっても、それを「伝道」できなければあとが続かない
-- 健全で有意義なコードレビューのやり取りがどのようなものか？という経験とその内面化
+- **健全で有意義なコードレビューのやり取りがどのようなものか？**という経験とその内面化
 
 ---
 ### コードレビューの技術
@@ -167,7 +170,7 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
 
 ---
 
-### 「ないものは作る」精神
+### 「自分でやる」精神
 
 - 「ライブラリや有名サービスのSDKがない」
   - 非メインストリーム言語においてツラミとしてよく挙がる
@@ -234,7 +237,8 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
 
 ### CI
 
-- 自動化ツールの導入はCIとセット
+- **ツールの導入はCIとセット**
+  - ＋エディタ連携
 - 人間は忘れるのだから、忘れない機械に何でもチェックさせる
   - ビルド、テスト、FormatterやLinter以外だと：
     - 破壊的変更（DB-Server間や、Server-Client間）の検知
@@ -253,7 +257,7 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
 - [mix release](https://hexdocs.pm/mix/1.18.4/Mix.Tasks.Release.html)によってパッケージ化し、あとは仮想サーバなりコンテナなりに置いて実行するだけ
   - 2020年のv1.10で導入されて大変やりやすくなった
   - DockerのMulti-stage buildによる軽量化とも相性が良い
-- しかもreleaseスクリプトには、remote console機能が同梱されていて、これがAWSならECS Execと相性抜群
+- しかもreleaseスクリプトには、remote console機能が同梱されていて、インフラがECSならECS Execと相性抜群
   - デプロイ環境でのデバッグに重宝する
 
 ---
@@ -633,10 +637,33 @@ String.split " " "Betty Botter bought some butter"
 
 <!-- Scalaを書いていた時代、implicitをもうちょっと辿りやすい開発環境だったら、もうちょっと好きになっていたかもしれない -->
 
+---
+### 新しい手法を取り入れるの章のまとめ
+- E2EテストにしろLinterにしろ、CI/CDとセットで価値が出るので環境整備は前提
+- 安定化・高速化のための努力は怠らない
+- 強力なツールは責任とともに
 
 ---
 
+<!-- _class: [lead, invert] -->
 ## 覚悟
 
-- 最終的には覚悟が必要
-- 継続・維持のために大切なこと
+---
+### 続けていく気概
+- ここまでほとんど定性的な話だったと思う
+- 何であれ技術要素の採用にあたっては、
+  - 周囲を巻き込んで積極的に環境・機会を作り出すこと
+  - 維持するために必要な労力は怠らないこと
+  - その姿を持って後続に道を示し続けること
+
+---
+### 続けていく気概
+- となると対象技術がメインストリームかどうかというよりは、結局**言い出しっぺにケツを持つ気概があるかどうか**じゃない？（雑）
+- よくOwnershipとかLastmanshipみたいな言葉が使われるやつ
+- こう言うと怖がらせるようでもあるが、**アウトリーチを怠らなければ意外と世の中にちゃんと仲間がいるということもわかる**ので意外とやっていける
+
+---
+### 結び
+諸兄におかれましては、勇気（と狂気）を奮って関数型言語採用の裾野を広げてほしいと思うところであります 😤
+
+_ありがとうございました！_
