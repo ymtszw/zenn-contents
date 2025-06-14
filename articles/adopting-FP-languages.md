@@ -1,12 +1,11 @@
 ---
 title: "関数型言語を採用し、維持し、継続する"
-emoji: ""
+emoji: "😤"
 type: "tech"
 topics:
-  - erlang
   - elixir
   - elm
-published: false
+published: true
 publication_name: siiibo_tech
 marp: true
 theme: gaia
@@ -161,7 +160,7 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
 - **健全で有意義なコードレビューのやり取りがどのようなものか？**という経験とその内面化
 
 ---
-### コードレビューの技術
+
 - 何をもって「できている」と言えるのかがそもそも難しい
   - ここでも主観が大事だし、ずっと研究が続く
   - マジで**環境に依存する**と思うので若いエンジニアには特に言っている
@@ -225,8 +224,6 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
 
 ---
 
-### 自動化する
-
 - これがやりやすいか言語か、標準ツールが存在するか、というのは当該言語に対する大きな加点項目
   - 少なくともElixir/Elmでは長いことformatの議論をしてない
     - Nearly-zero-configなformatterが標準
@@ -253,7 +250,9 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
 - 非メインストリームな技術にあっては、このあたりで詰まらないのは障壁をだいぶ下げる
 
 ---
+
 #### CD: Elixir
+
 - [mix release](https://hexdocs.pm/mix/1.18.4/Mix.Tasks.Release.html)によってパッケージ化し、あとは仮想サーバなりコンテナなりに置いて実行するだけ
   - 2020年のv1.10で導入されて大変やりやすくなった
   - DockerのMulti-stage buildによる軽量化とも相性が良い
@@ -261,7 +260,9 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
   - デプロイ環境でのデバッグに重宝する
 
 ---
+
 #### CD: Elm
+
 - Production build機能がコンパイラ同梱で、Dead-Code Eliminationを標準装備
 - 基本的にはこれだけでも比較的小さい成果物が得られる
 - 追加でMinifierをかけても良い
@@ -292,8 +293,6 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
 
 ---
 
-#### Upkeepしやすさ
-
 - Elixir, Elmはいずれも比較的優秀
   - mix (Elixir)のdeps解決は速いしわかりやすい
     - 必要に応じて脱出ハッチ（override）も使える
@@ -315,8 +314,6 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
 - 個人的には**Proudly Unchanged**とうそぶいている
 
 ---
-
-### Elmの特記事項
 
 - Elmの良いところは、Elm-runtimeで区切られた内部世界は純粋なので、その範囲では脆弱性の導入される余地がないこと
   - 少なくとも現行のアーキテクチャが確定したElm 0.18以来10年くらい経つが、筆者の認知している範囲ではこの前提は破られていない
@@ -350,11 +347,13 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
 ---
 
 ### 高速化し続ける
+
 - ユーザ側の努力でも高速化できる余地はあり、常に追求する
 - 高速化に繋がりそうな更新情報の追跡も怠らない
 - メンバーが増えるほどに、ローカル/CIいずれでもビルドやテストの実行時間短縮は乗算で大量の時間節約になる
 
 ---
+
 ### 高速化: mix test
 
 - [mix test](https://hexdocs.pm/mix/Mix.Tasks.Test.html)はElixirの標準テスト実行経路
@@ -364,7 +363,6 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
     - 参考: [ユニットテストってもう言わない！ CI/CD時代のテスト分類に最適なテストサイズという考え方](https://zenn.dev/koduki/articles/e0f8824adbe0e9)
 
 ---
-### 高速化: mix test
 
 - 該当するmix testの件数は最新のコードで4,500件ほどある
 - かなり多くの割合がDB I/Oを含む
@@ -373,7 +371,6 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
 ![w:800 mix test実行時間](/images/siiibo-test-time.png)
 
 ---
-### 高速化: mix test
 
 - 実際にやっているのは、
   - テストの並列実行
@@ -386,7 +383,6 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
 <!-- Sandbox接続は、DB接続直後にTxを開始し、その内部でのDB操作を接続終了時にすべてロールバックすることで、DB接続が続いている限り、そのプロセスにとっては実際にデータがDBに書き込まれたように振る舞うが、テスト終了時にはすべての操作がなかったことにされてクリーンな状態に戻るという仕組み -->
 
 ---
-### 高速化: mix test
 
 - 並列実行自体はmix testの標準機能
 - DB接続のSandboxingも[Ecto](https://github.com/elixir-ecto/ecto)（ElixirのORM+Query Builder）の標準機能
@@ -395,7 +391,7 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
   - 自然体だと同じDBを使うので、sandboxingしていてもWRITE操作の内容によってはdeadlockする
 
 ---
-### 高速化: mix test
+
 - そこで、
   - テスト同士の相互依存をなくすために、必要なfixtureデータはsandbox内で独立して作成する
   - テストDBを実行並列度に応じて複製する
@@ -403,20 +399,22 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
     - Ectoの[Dynamic Repo](https://hexdocs.pm/ecto/replicas-and-dynamic-repositories.html#dynamic-repositories)機能がこれを可能にしてくれる
 
 ---
-### 高速化: mix test
+
 - しかしEcto migration（よくあるパッチ方式のDB migration機能）を複製DB全てに適用するのは時間がかかる...
   - そこで、最新のDB schema snapshotを定期的に取得しておき、新規のテストDB作成時にはsnapshotから開始できるようにして高速化
 - ここまで見てきたように、Ectoの諸機能は快適なテスト実行に大いに寄与しており、こいつがデファクト・スタンダードとして存在していることはElixirの大きな強み
 
 ---
+
 ### 高速化: elm make
+
 - Elmのインクリメンタルコンパイルはデフォで比較的速い
   - これはDCEを有効化したprod buildでも同様
 - が、コンパイル対象moduleが多いときはそこそこかかる
 - しかも、**特定の実装パターンがあると、構成module数が増えたときにGC時間及びメモリ使用量が増えるという現象**に遭遇したことがあった
 
 ---
-### 高速化: elm make
+
 - 自分でやる精神のもと、社内で調査
 - ここはメンバーの[@tsukimizake](https://github.com/tsukimizake)が大活躍
   - プロファイラーを有効化してコンパイラをビルド
@@ -425,7 +423,7 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
   - 当該パターンを回避できるようにコード生成系を改修
 
 ---
-### 高速化: elm make
+
 - そもそも、このあたりをまるっと改修できるよう、コード生成系が整備されていたのも大きかった。この点は後述
 - [elm-meetup](https://elm-jp.connpass.com/event/262458/)でも発表された
   - [tsukimizake/elm-compilation-time-slide](https://github.com/tsukimizake/elm-compilation-time-slide/?tab=readme-ov-file)
@@ -434,6 +432,7 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
   - [Improving Compilation time: Insights from Elm Compiler Internals - Show and Tell - Elm](https://discourse.elm-lang.org/t/improving-compilation-time-insights-from-elm-compiler-internals/9028)
 
 ---
+
 ### 高速化の章のまとめ
 
 - AOTコンパイル言語、それもコンパイル時の機能（型検査含む）が豊富であれば、コードが育つほどに速度問題は不可避
@@ -446,6 +445,7 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
 ## 静的型付けでない言語と型の話
 
 ---
+
 ### Elixirやってると思うこと
 
 - **まあ型は欲しくなる**
@@ -453,7 +453,9 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
 - とはいえElmといっしょに開発し、多くのメンバーがなんだかんだElmも書いているという状況では、ありがたいことに多くの学びがある
 
 ---
+
 ### 直和による表現、パターンマッチによる分岐
+
 - Elmは言語機能が少ない静的型付けの純粋関数型言語
   - 典型的な実装イディオムとして、直和型とパターンマッチが頻出する
   - 昔書いた記事: [「ADT, 直和・直積, State Machine」 - Qiita](https://qiita.com/ymtszw/items/dff02ad6350032688676)
@@ -462,7 +464,7 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
   - 直和を表現する専用の言語機能はない
 
 ---
-### 直和による表現、パターンマッチによる分岐
+
 - が、Atomを使った「直和的な」データ表現はかなり頻出で（Erlang/Elixirの標準ライブラリ内でも！）、そのことに自覚的になると「自然な」実装パターンが見えてくる（主観）
   - 筆頭は`{:ok, value} | {:error, reason}`
 - 「Elmだとそういえばこう書いてたな、これElixirでもやれないの？」はそれなりにやれる
@@ -470,7 +472,9 @@ $ set start_date (git log master --reverse --pretty=format:'%ad' --date=short | 
   - `Result`型に対する諸APIはElixir側にも実装してある
 
 ---
+
 ### Pipeline-friendlyなassertion
+
 - [elm-test](https://package.elm-lang.org/packages/elm-explorations/test/latest/Expect)では`Expect`系関数をpipelineで受けて書かれる
 
 ```elm
@@ -481,7 +485,7 @@ String.split " " "Betty Botter bought some butter"
 - 一方`mix test`では`assert`マクロを手続き的に並べて書くことが多いが、場合によってはElmからの影響もあってpipeで書きたくなる
 
 ---
-### Pipeline-friendlyなassertion
+
 - [siiibo/assert_match](https://github.com/siiibo/assert_match)はそのような日常的洞察から生まれたOSS
 - 手前味噌ながらこの`assert_match`マクロは結構強力で、どのような構造に対してもパターンマッチとしてassertionを書けるので、
   - pipeで書けて気持ちいいし
@@ -490,14 +494,15 @@ String.split " " "Betty Botter bought some butter"
   - （主観）
 
 ---
-### 天から型が降ってきた！
+
+### 天から型が降ってきた
 
 - そんなこんなで言語間比較による恩恵はある程度受けていた
 - 関数型言語によく出てくる概念は、単一の言語だけやってるとイマイチ腹落ちせず、いくつか言語をまたぐと得心できることが多いという経験則があり、その意味でも有用
   - 個人的には、**Scalaで始まり、Elixirに入り、Haskellの手ほどきを受け、Elmで色々理解した**、という関数型キャリアパスを辿ってきた
 
 ---
-### 天から型が降ってきた！
+
 - とはいえ章冒頭の通り、Elixirに静的型検査がないことには定期的につまらなさを感じていたのだが...
 - なんとElixirのコンパイラが静的型検査を始めるという大本営発表がなされたのだ！
   - [My Future with Elixir: set-theoretic types](https://elixir-lang.org/blog/2022/10/05/my-future-with-elixir-set-theoretic-types/) (2022/10/05)
@@ -505,7 +510,7 @@ String.split " " "Betty Botter bought some butter"
   - [The Design Principles of the Elixir Type System](https://arxiv.org/abs/2306.06391)
 
 ---
-### 天から型が降ってきた！
+
 - Elixir v1.18で一部型検査機能がすでに有効化され、早速既存コードベースでもいくつかの潜在バグを発見・解消できた
 - [Elixir v1.19](https://github.com/elixir-lang/elixir/releases/tag/v1.19.0-rc.0)でもさらに入る：
   - Type checking of protocol dispatch and implementations
@@ -514,6 +519,7 @@ String.split " " "Betty Botter bought some butter"
 - **Upkeepをこまめにやるのは、このような新施策をすぐ採用できる強みに直結**
 
 ---
+
 ### 静的型付けでない言語と型の話の章のまとめ
 
 - 関数型言語のエッセンスを体得するには複数言語に触れたほうがいい
@@ -525,16 +531,19 @@ String.split " " "Betty Botter bought some butter"
 
 <!-- _class: [lead, invert] -->
 ## 情報収集 / コミュニティ還元
+
 「アウトリーチ」
 
 ---
+
 ### 情報収集
+
 - 非メインストリームな言語はほっといても情報が入ってくるわけではない
   - 規模にもよるが
 - それでも狂気を発露して採用に踏み切ったのなら、**アクティブな情報収集**は必須
 
 ---
-### 情報収集
+
 - 言語公式フォーラム/ML/Slack/Discordのウォッチ
   - コミュニティがデカすぎないことを逆に活かして、ライブラリ開発者などがよく出入りしているトピックやチャンネルを購読しちゃう
   - 最新動向を嫌でも逃さなくなる
@@ -544,7 +553,9 @@ String.split " " "Betty Botter bought some butter"
 - X
 
 ---
+
 ### コミュニティ還元
+
 - ウォッチしている経路での、質問者に対する回答
   - 聞いてるだけでなく回答もする
   - なにげに「自分が第一人者」「フロントランナー」である可能性を意識
@@ -553,7 +564,9 @@ String.split " " "Betty Botter bought some butter"
   - 何なら開催協力
 
 ---
+
 ### 採用の話
+
 - ここまで書いてきた「やれることやってる」環境を維持し、アウトリーチもすることは、とりも直さず採用に直結
 - 何しろ非メインストリームな技術要素は、それを業務でちょっと触ってみたいと思っても**会社の選択肢が少ない**
 - 選択肢がほしい・見識を広げたい人にとっては良いマッチング機会
@@ -561,7 +574,9 @@ String.split " " "Betty Botter bought some butter"
 <!-- 幸運もあるが、これまで採用にはあまり困ったことがなく、何ならインバウンドで定期的に希望者が来てくれている -->
 
 ---
+
 ### アウトリーチの章まとめ
+
 - やれることはやる、近道はない
 - 人口の少なさは好機でもある
 - 全世界を対象にすれば意外とコミュニティは広い
@@ -572,7 +587,9 @@ String.split " " "Betty Botter bought some butter"
 ## 新しい手法を取り入れる
 
 ---
+
 ### E2Eテスト
+
 - Autify→Playwright、という流れで2023年から導入
 - 口座開設、社債購入等の主要なトランザクション部分のsmoke testをE2Eテストとして表現
   - VRTも要所に導入して意図しない表示崩れを防ぎたい箇所を検証
@@ -580,46 +597,54 @@ String.split " " "Betty Botter bought some butter"
   - 検証環境に対するE2Eテストのパスを本番デプロイの要件に
 
 ---
-### E2Eテスト
+
 - Elmアプリはその純粋性故にE2Eテストと相性はいい（少なくとも概念上は）
   - 状態に対して描画結果が一意に定まる
   - E2Eテストのランナー環境をコンテナに統一すれば、OSごとのフォント描画差異なども解消できる
 - ではflakinessは全くないのか？
 
 ---
+
 ### E2Eテスト: Flakinessとの終わりなき戦い
+
 - **そんなことはない**
   - E2Eでアプリ動作を検証する場合は、ネットワーク越しの処理遅延などで思わぬ未定義状態に落ちたりする
     - 特に、非同期処理は完了msgの到着順にupdate関数の評価が行われるというTEAの性質上、明示的に直列化していない処理（ローカル環境では暗黙的に順序が定まっていたもの）が、実環境では逆転が生じる、とか
 
 ---
-### E2Eテスト: Flakinessとの終わりなき戦い
+
 - （続）
   - Playwright（使ってるChromiumブラウザ）のバージョンを上げると、描画の挙動が変わることがある→VRTが落ちる
   - そもそも、ブラウザのlayouting/renderingに若干非決定的（に見える）部分があって落ちたりもする
     - 深堀りしていくと一意に定められることも多いのだが、微妙なズレを解決しづらかったりもする
 
 ---
-### E2Eテスト: Flakinessとの終わりなき戦い
+
 - 結局ここでも高速化と同じような話で、テスト安定性の追求にはコストを割くというチームの合意と決意が必要
   - E2Eテストが安定している時期のデプロイの安心感は高い
   - そもそも、小さなほころびであっても実際に顧客環境での問題に繋がっているというE2Eテストの意義が前提にある
 - ついでにPlaywright Testを書く場合、Aria Roleを意識してマークアップを整えるとテストが書きやすくなる効果もあり、結局顧客価値にもつながっている
 
 ---
+
 ### elm-review
+
 - [elm-review](https://github.com/jfmengels/elm-review)は、Elmでルールを書けるElmプロジェクトのためのLinter
 - Elm 0.18時代に存在していた`elm-analyse`やAtom Editorの`elmjutsu`に搭載されていたLint機能の多くを引き継いでいる
 - Linterとしては、前述の通りCIでのチェックとセットで開発プロセスの屋台骨になる
 
 ---
+
 ### elm-review: 強力な正体
+
 - 実はelm-reviewはLinterというよりは、**Elmのコード変換ツール**であるという捉え方ができる
   - 内部的に[elm-syntax](https://github.com/stil4m/elm-syntax)が使われていて、ElmのASTを走査・操作できる
   - コンパイラの内部表現と直結してない外部ツールなので実行時間のオーバーヘッドはそこそこ大きいが
 
 ---
+
 ### elm-review: コード生成
+
 - この特徴を活かして、**コード生成ツールとして使う**のが実務ではありうる
   - 前述の通りElmの言語機能は意図的に少なく、コンパイル時コード生成のような機能は標準では提供されていない
   - 実務だとなんだかんだ必要になりがち
@@ -628,7 +653,9 @@ String.split " " "Betty Botter bought some butter"
     - APIクライアントmoduleの生成
 
 ---
+
 ### コード生成に対する考え方
+
 - ちなみにコード生成で（何ならマクロ含めて）陽に目に触れないコードが肥大化していくのってどうなん？という観点はある
 - 初学者にとって障壁になりがちなのは間違いない
 - が、最近はエディタ補助機能の進化によって、手書きであろうと自動生成であろうとマクロであろうと、コードの来歴・経路を辿りやすくなり、迷子になりにくくなった
@@ -638,7 +665,9 @@ String.split " " "Betty Botter bought some butter"
 <!-- Scalaを書いていた時代、implicitをもうちょっと辿りやすい開発環境だったら、もうちょっと好きになっていたかもしれない -->
 
 ---
+
 ### 新しい手法を取り入れるの章のまとめ
+
 - E2EテストにしろLinterにしろ、CI/CDとセットで価値が出るので環境整備は前提
 - 安定化・高速化のための努力は怠らない
 - 強力なツールは責任とともに
@@ -649,7 +678,9 @@ String.split " " "Betty Botter bought some butter"
 ## 覚悟
 
 ---
+
 ### 続けていく気概
+
 - ここまでほとんど定性的な話だったと思う
 - 何であれ技術要素の採用にあたっては、
   - 周囲を巻き込んで積極的に環境・機会を作り出すこと
@@ -657,13 +688,15 @@ String.split " " "Betty Botter bought some butter"
   - その姿を持って後続に道を示し続けること
 
 ---
-### 続けていく気概
+
 - となると対象技術がメインストリームかどうかというよりは、結局**言い出しっぺにケツを持つ気概があるかどうか**じゃない？（雑）
 - よくOwnershipとかLastmanshipみたいな言葉が使われるやつ
 - こう言うと怖がらせるようでもあるが、**アウトリーチを怠らなければ意外と世の中にちゃんと仲間がいるということもわかる**ので意外とやっていける
 
 ---
+
 ### 結び
+
 諸兄におかれましては、勇気（と狂気）を奮って関数型言語採用の裾野を広げてほしいと思うところであります 😤
 
 _ありがとうございました！_
